@@ -9,22 +9,16 @@ set_gpu_config()
 print(tf.test.is_gpu_available())
 tf.compat.v1.disable_eager_execution()
 
-my_model = AdvModel(10, [2, 2])
 
 num_epochs = 30
 classification_weight = [10, .0]
-proto_dist_weights = [1, .0]
-feature_dist_weights = [1, .0]
-disentangle_weights = [[0, 100], [0, 0]]
-# disentangle_weights = [[0, 0], [0, 0]]
-kl_losses = [0, 0]
 batch_size = 32
 
 y_accuracy = []
 s_accuracy = []
 disparate_impacts = []
 demographics = []
-for model_id in range(30):
+for model_id in range(1):
     np.random.seed(model_id)
     tf.random.set_seed(model_id)
     train_data, train_labels, train_protected, test_data, test_labels, test_protected = get_german_data('data/german_credit_data.csv', wass_setup=False)
@@ -45,3 +39,6 @@ for model_id in range(30):
     print("Mean test rate", mean_train_labels)
     mean_test_rate = np.mean(test_labels)
     print("Mean test rate", mean_test_rate)
+
+    my_model = AdvModel(input_size, [2, 2])
+    my_model.train((train_data, [train_labels_one_hot, train_protected_one_hot]))
