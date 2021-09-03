@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn import preprocessing
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -9,17 +10,19 @@ from models.flip_gradient_tf import GradReverse
 
 
 class AdvModel:
-    def __init__(self, input_size, output_sizes):
+    def __init__(self, input_size, output_sizes, weights):
         self.input_size = input_size
         self.output_sizes = output_sizes
         self.latent_dim = 64
+        self.weights = weights
         parts = self._build_parts()
+        self.encoder = parts[0]
         self.model = self._compose_parts(parts)
 
     def _build_parts(self):
         enc_inp = keras.Input(shape=(self.input_size,), name='img_input')
         x = enc_inp
-        feature_enc = layers.Dense(self.latent_dim, activation="linear")(x)
+        feature_enc = layers.Dense(self.latent_dim, activation="relu")(x)
         encoder = keras.Model(inputs=enc_inp, outputs=feature_enc, name='encoder')
 
         pred_inp = keras.Input(shape=(self.latent_dim,), name='pre_input')
@@ -49,13 +52,13 @@ class AdvModel:
         overall = keras.Model(inputs=inp, outputs=[y, a])
         overall.compile(optimizer='adam',
                         loss=['categorical_crossentropy', 'categorical_crossentropy'],
-                        loss_weights=[1, 1],
+                        loss_weights=self.weights,
                         metrics=['accuracy'])
         return overall
 
-    def train(self, training_data):
+    def train(self, training_data, num_epochs):
         inps, outs = training_data
-        self.model.fit(inps, outs, batch_size=16, epochs=30, verbose=0, validation_split=0.0)
+        self.model.fit(inps, outs, batch_size=16, epochs=num_epochs, verbose=1, validation_split=0.0)
 
     def evaluate(self, x, y_one_hot, ys):
         eval_results = self.model.evaluate(x, y_one_hot)
@@ -99,9 +102,14 @@ class AdvModel:
         regression_model = LogisticRegression()
         training_frac = 0.5
         x_train = x[:int(training_frac * len(x))]
+        enc_train = self.encoder.predict(x_train)
         y_train = ys[1][:int(training_frac * len(x))]
-        regression_model.fit(x_train, y_train)
+        scaler = preprocessing.StandardScaler().fit(enc_train)
+        enc_train = scaler.transform(enc_train)
+        regression_model.fit(enc_train, y_train)
         x_test = x[int(training_frac * len(x)):]
+        enc_test = self.encoder.predict(x_test)
+        enc_test = scaler.transform(enc_test)
         y_test = ys[1][int(training_frac * len(x)):]
-        score = regression_model.score(x_test, y_test)
+        score = regression_model.score(enc_test, y_test)
         return disparity_impact, dem_disparity, score

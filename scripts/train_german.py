@@ -11,8 +11,7 @@ tf.compat.v1.disable_eager_execution()
 
 
 num_epochs = 30
-classification_weight = [10, .0]
-batch_size = 32
+weights = [1, 1]
 
 y_accuracy = []
 s_accuracy = []
@@ -40,8 +39,8 @@ for model_id in range(20):
     mean_test_rate = np.mean(test_labels)
     print("Mean test rate", mean_test_rate)
 
-    my_model = AdvModel(input_size, [2, 2])
-    my_model.train((train_data, [train_labels_one_hot, train_protected_one_hot]))
+    my_model = AdvModel(input_size, [2, 2], weights)
+    my_model.train((train_data, [train_labels_one_hot, train_protected_one_hot]), num_epochs=num_epochs)
     y_acc, di, dd, s_acc = my_model.evaluate(test_data, [test_labels_one_hot, test_protected_one_hot], [test_labels, test_protected])
     y_accuracy.append(y_acc)
     s_accuracy.append(s_acc)
@@ -52,3 +51,4 @@ for model_id in range(20):
     print("Mean s_acc", np.mean(s_accuracy), np.std(s_accuracy))
     print("Mean impact", np.mean(disparate_impacts), np.std(disparate_impacts))
     print("Mean disparity", np.mean(demographics), np.std(demographics))
+    keras.backend.clear_session()
