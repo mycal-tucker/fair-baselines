@@ -7,13 +7,14 @@ from utils.metrics import get_disparate_impact, accuracy
 from utils.plotting import plot_encodings
 
 class VFAE:
-    def __init__(self, input_size, output_sizes, weights):
+    def __init__(self, input_size, output_sizes, weights, batch_size=100, hidden_dim=60, latent_dim=30):
         self.input_size = input_size
         self.gamma = 1
         self.output_sizes = output_sizes
-        self.latent_dim = 30  # From paper
-        # self.latent_dim = 2  # For debugging
-        self.batch_size = 100
+        self.weights = weights
+        self.latent_dim = latent_dim
+        self.batch_size = batch_size
+        self.hidden_dim = hidden_dim
         parts = self._build_parts()
         self.encoder = parts[0]
         self.model, self.inference_model, self.viz_model = self._compose_parts(parts)
@@ -22,7 +23,7 @@ class VFAE:
         x_inp = keras.Input(shape=(self.input_size,), name='x_inp')
         enc_s_inp = keras.Input(shape=(1,), name='enc_s_input')
         enc_inp = layers.Concatenate()([x_inp, enc_s_inp])
-        x = layers.Dense(60, activation="relu")(enc_inp)
+        x = layers.Dense(self.hidden_dim, activation="relu")(enc_inp)
         x = layers.Dense(self.latent_dim, activation="relu")(x)
         enc_mu = layers.Dense(self.latent_dim, activation='linear')(x)
         enc_log_var = layers.Dense(self.latent_dim, activation='linear')(x)
@@ -31,7 +32,6 @@ class VFAE:
         encoder = keras.Model(inputs=[x_inp, enc_s_inp], outputs=[feature_enc, enc_mu, enc_log_var], name='encoder')
 
         pred_inp = keras.Input(shape=(self.latent_dim,), name='pre_input')
-        # x = layers.Dense(60, activation='relu')(pred_inp)
         x = pred_inp
         y = layers.Dense(self.output_sizes[0], activation='softmax')(x)
         pred = keras.Model(inputs=pred_inp, outputs=y, name='predictor')
@@ -61,12 +61,12 @@ class VFAE:
 
     def loss_func(self, encoder_mu, encoder_log_variance, s0_encs, s1_encs):
         def vae_classification(y_true, y_predict):
-            pred_factor = 10
+            pred_factor = self.weights[0]
             pred_loss = keras.backend.mean(keras.backend.categorical_crossentropy(y_true, y_predict))
             return pred_factor * pred_loss
 
         def vae_kl_loss(mu, log_var):
-            kl_factor = 0.5
+            kl_factor = self.weights[1]
             kl_loss = -0.5 * keras.backend.mean(
                 1.0 + log_var - keras.backend.square(mu) - keras.backend.exp(
                     log_var))
@@ -75,11 +75,11 @@ class VFAE:
         def psi(x):
             w = tf.random.normal((self.latent_dim, 500),
                                  stddev=tf.sqrt(0.5 / self.latent_dim))
-            b = tf.random.uniform((self.batch_size, 500), 0, 2 * np.pi)
+            b = tf.random.uniform((tf.shape(x)[0], 500), 0, 2 * np.pi)
             return tf.pow(2./self.latent_dim, 0.5) * tf.cos(tf.pow(2./self.gamma, 0.5) * tf.matmul(x, w) + b)
 
         def fast_mmd(x1, x2):
-            mmd_factor = 1
+            mmd_factor = self.weights[2]
             inner_diff = tf.reduce_mean(psi(x1), axis=0) - tf.reduce_mean(psi(x2), axis=0)
             dotted = keras.backend.mean(tf.tensordot(inner_diff, inner_diff, axes=1))
             return mmd_factor * dotted
