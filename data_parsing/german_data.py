@@ -60,8 +60,10 @@ def get_german_data(filepath, wass_setup=False):
     data = data[[c for c in data if c not in ['Risk', protected_label]] + [protected_label] + ['Risk']]
     # Shuffle all the data
     data = data.sample(frac=1)
-    data_train = data.iloc[:800]
-    data_test = data.iloc[800:]
+    frac = 0.8 if not wass_setup else 0.67
+    train_idx = int(1000 * frac)
+    data_train = data.iloc[:train_idx]
+    data_test = data.iloc[train_idx:]
     x_train = data_train.iloc[:, :-2]
     p_train = data_train.iloc[:, -2]
     y_train = data_train.iloc[:, -1]
