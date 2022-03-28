@@ -19,7 +19,7 @@ y_accuracy = []
 s_accuracy = []
 disparate_impacts = []
 demographics = []
-for model_id in range(30):
+for model_id in range(20):
     np.random.seed(model_id)
     tf.random.set_seed(model_id)
     train_data, train_labels_one_hot, train_protected_one_hot, test_data, test_labels_one_hot, test_protected_one_hot = get_adult_data('data/adult.csv', 'data/adult_test.csv')

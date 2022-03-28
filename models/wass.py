@@ -7,14 +7,13 @@ from utils.metrics import get_disparate_impact
 
 
 class Wass:
-    def __init__(self, input_size, alpha=0.5):
+    def __init__(self, input_size, alpha=0.5, eta=0.01):
         self.input_size = input_size
         self.theta = np.random.random((input_size + 1))  # FIXME: different init.
         self.alpha = alpha
+        self.eta = eta
 
-    def train(self, training_data, num_epochs=10, test_data=None):
-        eta = 0.001
-        batch_size = 100
+    def train(self, training_data, num_epochs=10, test_data=None, batch_size=100):
         inputs, y, protected = training_data
         protected_inputs = {}
         for idx, protected_val in enumerate(protected):
@@ -39,16 +38,16 @@ class Wass:
 
 
             # print("Grad", grad)
-            if epoch % 1000 == 0:
-                print("Epoch", epoch, "of", num_epochs)
-            #     # print("Cost logistic", cost_log)
-                if test_data:
-                    acc, di, dd, s_acc = self.evaluate(test_data)
-                    print("di", di)
-                    print("dd", dd)
-                    print("s acc", s_acc)
+            # if epoch % 1000 == 0:
+            #     print("Epoch", epoch, "of", num_epochs)
+            #     print("Cost logistic", cost_log)
+            #     if test_data:
+            #         acc, di, dd, s_acc = self.evaluate(test_data)
+            #         print("di", di)
+            #         print("dd", dd)
+            #         print("s acc", s_acc)
             # print("Cost wass", cost_wass)
-            self.theta = self.theta - eta * grad
+            self.theta = self.theta - self.eta * grad
 
     def evaluate(self, test_data):
         inputs, y, protected = test_data

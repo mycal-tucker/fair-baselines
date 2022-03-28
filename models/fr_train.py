@@ -63,7 +63,7 @@ class FRTrain:
 
     def train(self, training_data, num_epochs):
         inps, outs = training_data
-        self.model.fit(inps, outs, batch_size=16, epochs=num_epochs, verbose=1, validation_split=0.0)
+        self.model.fit(inps, outs, batch_size=16, epochs=num_epochs, verbose=0, validation_split=0.0)
 
     def evaluate(self, x, y_one_hot, ys):
         eval_results = self.model.evaluate(x, y_one_hot)

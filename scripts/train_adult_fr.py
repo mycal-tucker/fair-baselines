@@ -18,7 +18,7 @@ y_accuracy = []
 s_accuracy = []
 disparate_impacts = []
 demographics = []
-for model_id in range(30):
+for model_id in range(20):
     np.random.seed(model_id)
     tf.random.set_seed(model_id)
     train_data, train_labels_one_hot, train_protected_one_hot, test_data, test_labels_one_hot, test_protected_one_hot = get_adult_data('data/adult.csv', 'data/adult_test.csv')
@@ -33,7 +33,6 @@ for model_id in range(30):
     train_robustness[:, 1] = 1
     test_robustness = np.zeros_like(test_protected_one_hot)
     test_robustness[:, 1] = 1
-
 
     my_model = FRTrain([input_size, 2], [2, 2, 2], weights)
     my_model.train(([train_data, train_protected_one_hot], [train_labels_one_hot, train_protected_one_hot, train_robustness]), num_epochs=num_epochs)
