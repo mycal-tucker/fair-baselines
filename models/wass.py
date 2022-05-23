@@ -35,18 +35,6 @@ class Wass:
                                                                   alpha=self.alpha,
                                                                    # distance='wasserstein-1')
                                                                    distance='wasserstein-2')
-
-
-            # print("Grad", grad)
-            # if epoch % 1000 == 0:
-            #     print("Epoch", epoch, "of", num_epochs)
-            #     print("Cost logistic", cost_log)
-            #     if test_data:
-            #         acc, di, dd, s_acc = self.evaluate(test_data)
-            #         print("di", di)
-            #         print("dd", dd)
-            #         print("s acc", s_acc)
-            # print("Cost wass", cost_wass)
             self.theta = self.theta - self.eta * grad
 
     def evaluate(self, test_data):

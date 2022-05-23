@@ -170,7 +170,6 @@ def prepare_data(raw_data, means, wass_setup=False, filter_entries=True):
     if wass_setup:
         percentiles = convert_continuous_to_categorical(X)
     for person in range(len(X)):
-        # print("Running person", person, "of", len(X))
         person_data = X[person]
         race = person_data[race_idx]
         if wass_setup and filter_entries and race not in ['White', 'Black']:  # Wass only uses white or black
@@ -239,7 +238,7 @@ def prepare_data(raw_data, means, wass_setup=False, filter_entries=True):
         elt = y[i][0]
         if '>' in elt:
             new_y.append((1, 0))
-        else:  # y[i] == "<=50k":
+        else:
             new_y.append((0, 1))
     new_y = np.array(new_y)
     return new_X, new_p, new_y

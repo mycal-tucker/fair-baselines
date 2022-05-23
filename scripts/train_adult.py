@@ -7,7 +7,6 @@ from utils.gpu import set_gpu_config
 
 
 set_gpu_config()
-print(tf.test.is_gpu_available())
 tf.compat.v1.disable_eager_execution()
 
 num_epochs = 30
